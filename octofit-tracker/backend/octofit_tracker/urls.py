@@ -18,9 +18,9 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from rest_framework.schemas import get_schema_view
-from rest_framework.documentation import include_docs_urls
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+
 
 router = DefaultRouter()
 router.register(r'teams', views.TeamViewSet)
@@ -29,20 +29,22 @@ router.register(r'activities', views.ActivityViewSet)
 router.register(r'workouts', views.WorkoutViewSet)
 router.register(r'leaderboard', views.LeaderboardViewSet)
 
+
+import os
 @api_view(['GET'])
 def api_root(request, format=None):
+    codespace_name = os.environ.get('CODESPACE_NAME')
+    base_url = f"https://{codespace_name}-8000.app.github.dev/api/" if codespace_name else request.build_absolute_uri('/api/')
     return Response({
-        'teams': request.build_absolute_uri('teams/'),
-        'users': request.build_absolute_uri('users/'),
-        'activities': request.build_absolute_uri('activities/'),
-        'workouts': request.build_absolute_uri('workouts/'),
-        'leaderboard': request.build_absolute_uri('leaderboard/'),
+        'teams': base_url + 'teams/',
+        'users': base_url + 'users/',
+        'activities': base_url + 'activities/',
+        'workouts': base_url + 'workouts/',
+        'leaderboard': base_url + 'leaderboard/',
     })
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', api_root, name='api-root'),
-    path('', include(router.urls)),
-    path('schema/', get_schema_view(title="OctoFit API"), name='openapi-schema'),
-    path('docs/', include_docs_urls(title='OctoFit API')),
+    path('api/', api_root, name='api-root'),
+    path('api/', include(router.urls)),
 ]
